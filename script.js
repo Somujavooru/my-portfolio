@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Mobile Navigation
+  // Mobile Navigation (existing)
   const hamburger = document.querySelector('.hamburger');
   const navLinks = document.querySelector('.nav-links');
   
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks.classList.toggle('active');
   });
   
-  // Close mobile menu when clicking a link
+  // Close mobile menu when clicking a link (existing)
   document.querySelectorAll('.nav-links a').forEach(link => {
     link.addEventListener('click', () => {
       hamburger.classList.remove('active');
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Sticky Header
+  // Sticky Header (existing)
   const header = document.querySelector('.sticky-header');
   window.addEventListener('scroll', function() {
     if (window.scrollY > 100) {
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  // Back to Top Button
+  // Back to Top Button (existing)
   const backToTopButton = document.querySelector('.back-to-top');
   window.addEventListener('scroll', function() {
     if (window.scrollY > 300) {
@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  // Smooth scrolling for anchor links
+  // Smooth scrolling for anchor links (existing)
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function(e) {
       e.preventDefault();
@@ -61,47 +61,95 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
-  
-  // Form submission
-  const contactForm = document.querySelector('.contact-form');
-  if (contactForm) {
-    contactForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const formData = new FormData(this);
-      const submitButton = this.querySelector('button[type="submit"]');
-      const originalButtonText = submitButton.textContent;
-      
-      submitButton.disabled = true;
-      submitButton.textContent = 'Sending...';
-      
-      fetch(this.action, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      })
-      .then(response => {
-        if (response.ok) {
-          alert('Message sent successfully!');
-          this.reset();
-        } else {
-          throw new Error('Network response was not ok');
-        }
-      })
-      .catch(error => {
-        alert('There was a problem sending your message. Please try again later.');
-        console.error('Error:', error);
-      })
-      .finally(() => {
-        submitButton.disabled = false;
-        submitButton.textContent = originalButtonText;
-      });
-    });
+
+  // Certificate modal functionality (existing)
+  function openModal(imgSrc) {
+    const modal = document.getElementById('certificateModal');
+    const modalImg = document.getElementById('modalImage');
+    modal.style.display = "block";
+    modalImg.src = imgSrc;
   }
   
-  // Animation on scroll
+  function closeModal() {
+    document.getElementById('certificateModal').style.display = "none";
+  }
+  
+  window.onclick = function(event) {
+    const modal = document.getElementById('certificateModal');
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  // NEW: Email Form Submission
+  const contactForm = document.querySelector('.contact-form');
+  if (contactForm) {
+    contactForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const submitButton = this.querySelector('button[type="submit"]');
+      const originalText = submitButton.innerHTML;
+      
+      // Show loading state
+      submitButton.disabled = true;
+      submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+      
+      try {
+        const formData = new FormData(this);
+        const response = await fetch('http://localhost:5000/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        const result = await response.json();
+        
+        if (!response.ok) throw new Error(result.message || 'Failed to send message');
+        
+        // Success message
+        showAlert('success', 'Message sent successfully!');
+        contactForm.reset();
+        
+      } catch (error) {
+        // Error message
+        showAlert('error', error.message || 'Failed to send message');
+      } finally {
+        // Reset button
+        submitButton.disabled = false;
+        submitButton.innerHTML = originalText;
+      }
+    });
+  }
+
+  // NEW: Alert notification function
+  function showAlert(type, message) {
+    // Remove existing alerts first
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Create new alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert ${type}`;
+    alertDiv.innerHTML = `
+      <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+      <span>${message}</span>
+    `;
+    
+    // Insert after the contact form title
+    const contactTitle = document.querySelector('#contact .section-title');
+    if (contactTitle) {
+      contactTitle.parentNode.insertBefore(alertDiv, contactTitle.nextSibling);
+    } else {
+      // Fallback to prepend to contact section
+      const contactSection = document.querySelector('#contact');
+      if (contactSection) contactSection.prepend(alertDiv);
+    }
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => alertDiv.remove(), 5000);
+  }
+
+  // Animation on scroll (existing)
   const animateOnScroll = function() {
     const elements = document.querySelectorAll('.project-card, .skill-category, .certificate-card, .about-image, .contact-text');
     
@@ -116,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   };
   
-  // Set initial state for animated elements
+  // Set initial state for animated elements (existing)
   document.querySelectorAll('.project-card, .skill-category, .certificate-card, .about-image, .contact-text').forEach(element => {
     element.style.opacity = '0';
     element.style.transform = 'translateY(20px)';
