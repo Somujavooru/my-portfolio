@@ -595,5 +595,74 @@
       heroTitle.style.whiteSpace = 'nowrap';
     });
   </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const contactForm = document.querySelector('.contact-form');
+      
+      if (contactForm) {
+        contactForm.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          const formData = new FormData(this);
+          const submitButton = this.querySelector('button[type="submit"]');
+          const originalText = submitButton.textContent;
+          
+          // UI feedback
+          submitButton.disabled = true;
+          submitButton.textContent = 'Sending...';
+          
+          try {
+            const response = await fetch('http://localhost:5000/send-email', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: formData.get('name'),
+                email: formData.get('email'),
+                subject: formData.get('subject'),
+                message: formData.get('message')
+              })
+            });
+    
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to send message');
+            }
+            
+            // Success handling
+            const successHTML = `
+              <div class="alert success">
+                <i class="fas fa-check-circle"></i>
+                <p>Message sent successfully! I'll get back to you soon.</p>
+              </div>
+            `;
+            contactForm.insertAdjacentHTML('beforebegin', successHTML);
+            contactForm.reset();
+            
+          } catch (error) {
+            // Error handling
+            const errorHTML = `
+              <div class="alert error">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error: ${error.message}</p>
+              </div>
+            `;
+            contactForm.insertAdjacentHTML('beforebegin', errorHTML);
+          } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = originalText;
+            
+            // Remove alerts after 5 seconds
+            setTimeout(() => {
+              const alerts = document.querySelectorAll('.alert');
+              alerts.forEach(alert => alert.remove());
+            }, 5000);
+          }
+        });
+      }
+    });
+    </script>
 </body>
 </html>
